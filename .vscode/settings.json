@@ -1,0 +1,11 @@
+{
+    "java.project.sourcePaths": [
+        "tests",
+        "sources"
+    ],
+    "java.project.referencedLibraries": [
+        "C:/qub/qub/lib-java/versions/178/lib-java.jar",
+        "C:/qub/qub/lib-java/versions/178/lib-java.tests.jar"
+    ],
+    "java.foldingRange.enabled": false
+}
