@@ -6,7 +6,7 @@ package qub;
  */
 public class VSCodeSettingsJson extends JSONObjectWrapperBase
 {
-    private VSCodeSettingsJson(JSONObject json)
+    protected VSCodeSettingsJson(JSONObject json)
     {
         super(json);
     }

@@ -5,7 +5,7 @@ public class VSCodeTasksJson extends JSONObjectWrapperBase
     private static final String versionPropertyName = "version";
     private static final String tasksPropertyName = "tasks";
 
-    private VSCodeTasksJson(JSONObject json)
+    protected VSCodeTasksJson(JSONObject json)
     {
         super(json);
     }
