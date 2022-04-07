@@ -85,7 +85,7 @@ public class VSCodeLaunchJson extends JSONObjectWrapperBase
      * @param configurations The configurations specified in this launch.json file.
      * @return This object for method chaining.
      */
-    public VSCodeLaunchJson setConfigurations(Iterable<VSCodeLaunchConfigurationJson> configurations)
+    public VSCodeLaunchJson setConfigurations(Iterable<? extends VSCodeLaunchConfigurationJson> configurations)
     {
         PreCondition.assertNotNull(configurations, "configurations");
 
