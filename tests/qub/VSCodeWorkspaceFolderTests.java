@@ -264,6 +264,120 @@ public interface VSCodeWorkspaceFolderTests
                     test.assertEqual(tasksJson, folder.getTasksJson().await());
                 });
             });
+
+            runner.test("getLaunchJsonFile()",
+                (TestResources resources) -> Tuple.create(resources.createFakeDesktopProcess()),
+                (Test test, FakeDesktopProcess process) ->
+            {
+                final Folder currentFolder = process.getCurrentFolder();
+                final VSCodeWorkspaceFolder folder = VSCodeWorkspaceFolder.get(currentFolder);
+                
+                final File launchJsonFile = folder.getLaunchJsonFile();
+                test.assertNotNull(launchJsonFile);
+                test.assertEqual(folder.getFile(".vscode/launch.json").await(), launchJsonFile);
+            });
+
+            runner.testGroup("getLaunchJson()", () ->
+            {
+                runner.test("with non-existing .vscode folder",
+                    (TestResources resources) -> Tuple.create(resources.createFakeDesktopProcess()),
+                    (Test test, FakeDesktopProcess process) ->
+                {
+                    final Folder currentFolder = process.getCurrentFolder();
+                    final VSCodeWorkspaceFolder folder = VSCodeWorkspaceFolder.get(currentFolder);
+
+                    test.assertThrows(() -> folder.getLaunchJson().await(),
+                        new FileNotFoundException(folder.getFile(".vscode/launch.json").await()));
+
+                    test.assertEqual(Iterable.create(), folder.iterateEntriesRecursively().toList());
+                });
+
+                runner.test("with non-existing launch.json file",
+                    (TestResources resources) -> Tuple.create(resources.createFakeDesktopProcess()),
+                    (Test test, FakeDesktopProcess process) ->
+                {
+                    final Folder currentFolder = process.getCurrentFolder();
+                    final VSCodeWorkspaceFolder folder = VSCodeWorkspaceFolder.get(currentFolder);
+                    folder.createFolder(".vscode").await();
+
+                    test.assertThrows(() -> folder.getLaunchJson().await(),
+                        new FileNotFoundException(folder.getFile(".vscode/launch.json").await()));
+
+                    test.assertEqual(
+                        Iterable.create(
+                            "/.vscode/"),
+                        folder.iterateEntriesRecursively()
+                            .map(FileSystemEntry::toString)
+                            .toList());
+                });
+
+                final Action2<String,Throwable> getLaunchJsonErrorTest = (String contents, Throwable expected) ->
+                {
+                    runner.test("with " + Strings.escapeAndQuote(contents) + " launch.json file contents",
+                        (TestResources resources) -> Tuple.create(resources.createFakeDesktopProcess()),
+                        (Test test, FakeDesktopProcess process) ->
+                    {
+                        final Folder currentFolder = process.getCurrentFolder();
+                        final VSCodeWorkspaceFolder folder = VSCodeWorkspaceFolder.get(currentFolder);
+                        folder.setFileContentsAsString(".vscode/launch.json", contents).await();
+    
+                        test.assertThrows(() -> folder.getLaunchJson().await(),
+                            expected);
+                    });
+                };
+
+                getLaunchJsonErrorTest.run("", new ParseException("Missing object left curly bracket ('{')."));
+                getLaunchJsonErrorTest.run("[]", new ParseException("Expected object left curly bracket ('{')."));
+
+                final Action2<String,VSCodeLaunchJson> getLaunchJsonTest = (String contents, VSCodeLaunchJson expected) ->
+                {
+                    runner.test("with " + Strings.escapeAndQuote(contents) + " launch.json file contents",
+                        (TestResources resources) -> Tuple.create(resources.createFakeDesktopProcess()),
+                        (Test test, FakeDesktopProcess process) ->
+                    {
+                        final Folder currentFolder = process.getCurrentFolder();
+                        final VSCodeWorkspaceFolder folder = VSCodeWorkspaceFolder.get(currentFolder);
+                        folder.setFileContentsAsString(".vscode/launch.json", contents).await();
+    
+                        final VSCodeLaunchJson launchJson = folder.getLaunchJson().await();
+                        test.assertEqual(expected, launchJson);
+                    });
+                };
+
+                getLaunchJsonTest.run("{}", VSCodeLaunchJson.create());
+            });
+
+            runner.testGroup("setLaunchJson(VSCodeLaunchJson)", () ->
+            {
+                runner.test("with null",
+                    (TestResources resources) -> Tuple.create(resources.createFakeDesktopProcess()),
+                    (Test test, FakeDesktopProcess process) ->
+                {
+                    final Folder currentFolder = process.getCurrentFolder();
+                    final VSCodeWorkspaceFolder folder = VSCodeWorkspaceFolder.get(currentFolder);
+
+                    test.assertThrows(() -> folder.setLaunchJson(null),
+                        new PreConditionFailure("launchJson cannot be null."));
+
+                    test.assertEqual(Iterable.create(), folder.iterateEntriesRecursively().toList());
+                });
+
+                runner.test("with non-null",
+                    (TestResources resources) -> Tuple.create(resources.createFakeDesktopProcess()),
+                    (Test test, FakeDesktopProcess process) ->
+                {
+                    final Folder currentFolder = process.getCurrentFolder();
+                    final VSCodeWorkspaceFolder folder = VSCodeWorkspaceFolder.get(currentFolder);
+
+                    final VSCodeLaunchJson launchJson = VSCodeLaunchJson.create()
+                        .setVersion("1.2.3");
+
+                    final Integer setLaunchJsonResult = folder.setLaunchJson(launchJson).await();
+                    test.assertEqual(24, setLaunchJsonResult);
+
+                    test.assertEqual(launchJson, folder.getLaunchJson().await());
+                });
+            });
         });
     }
 }

@@ -116,4 +116,34 @@ public class VSCodeWorkspaceFolder extends Folder
 
         return VSCodeWorkspaceFolder.writeParsedFile(this.getTasksJsonFile(), tasksJson);
     }
+
+    /**
+     * Get a reference to the ".vscode/launch.json" file in this workspace folder.
+     * @return A reference to the ".vscode/launch.json" file in this workspace folder.
+     */
+    public File getLaunchJsonFile()
+    {
+        return this.getVSCodeFolder().getFile("launch.json").await();
+    }
+
+    /**
+     * Get the parsed contents of the ".vscode/launch.json" file in this workspace folder.
+     * @return The parsed contents of the ".vscode/launch.json" file in this workspace folder.
+     */
+    public Result<VSCodeLaunchJson> getLaunchJson()
+    {
+        return VSCodeWorkspaceFolder.readParsedFile(this.getLaunchJsonFile(), VSCodeLaunchJson::create);
+    }
+
+    /**
+     * Set the contents of the ".vscode/launch.json" file in this workspace folder.
+     * @param launchJson The contents of the ".vscode/launch.json" file.
+     * @return The number of characters that were written.
+     */
+    public Result<Integer> setLaunchJson(VSCodeLaunchJson launchJson)
+    {
+        PreCondition.assertNotNull(launchJson, "launchJson");
+
+        return VSCodeWorkspaceFolder.writeParsedFile(this.getLaunchJsonFile(), launchJson);
+    }
 }
